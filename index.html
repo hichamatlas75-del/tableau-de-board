@@ -3,83 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord Pro</title>
+    <title>Dashboard Minimaliste</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; overflow: hidden; background: #2c3e50; }
-        
-        header { background: #2c3e50; color: white; padding: 15px; text-align: center; font-weight: bold; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: #1a1a1a; overflow: hidden; }
 
-        /* Conteneur de l'iframe */
-        .content-area { position: relative; width: 100%; height: calc(100% - 130px); background: white; }
+        /* Zone d'affichage plein écran */
+        .content-area { position: relative; width: 100%; height: 100vh; }
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* ÉCRAN DE CHARGEMENT */
+        /* Loader */
         #loader {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.9);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.8);
             display: flex; justify-content: center; align-items: center;
-            z-index: 10;
-            display: none; /* Caché par défaut */
+            z-index: 100; display: none;
+        }
+        .spinner { width: 30px; height: 30px; border: 3px solid #ddd; border-top: 3px solid #2c3e50; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* CONTENEUR DES BOUTONS FLOTTANTS */
+        .fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 999;
         }
 
-        .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+        /* Style des petits boutons */
+        .fab {
+            width: 50px;
+            height: 50px;
+            background-color: #2c3e50;
+            color: white;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-size: 1.2rem;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .fab:active { transform: scale(0.9); }
+        .fab.active { background-color: #3498db; border-color: white; }
 
-        /* Navigation */
-        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 70px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .nav-item { flex: 1; text-decoration: none; color: #7f8c8d; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.8rem; }
-        .nav-item.active { color: #3498db; border-top: 3px solid #3498db; }
-        .icon { font-size: 1.4rem; }
+        /* Tooltip (optionnel : petit texte au dessus) */
+        .fab span {
+            position: absolute;
+            right: 60px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+        .fab:hover span { opacity: 1; }
+
     </style>
 </head>
 <body>
 
-<header id="page-title">Pointage</header>
-
 <div class="content-area">
     <div id="loader"><div class="spinner"></div></div>
-    
     <iframe id="main-frame" src="https://pointage-greycorner.pages.dev/" onload="hideLoader()"></iframe>
 </div>
 
-<nav>
-    <a href="#" class="nav-item active" onclick="updateUI('https://pointage-greycorner.pages.dev/', 'Pointage', this)">
-        <span class="icon">📍</span><span>Pointage</span>
-    </a>
-    <a href="#" class="nav-item" onclick="updateUI('https://feuille-de-presence.pages.dev/', 'Présence', this)">
-        <span class="icon">📝</span><span>Présence</span>
-    </a>
-    <a href="#" class="nav-item" onclick="updateUI('https://dashboard-presence.pages.dev/', 'Supervision', this)">
-        <span class="icon">📊</span><span>Supervision</span>
-    </a>
-</nav>
+<div class="fab-container">
+    <div class="fab active" onclick="changePage('https://pointage-greycorner.pages.dev/', this)">
+        📍<span>Pointage</span>
+    </div>
+    <div class="fab" onclick="changePage('https://feuille-de-presence.pages.dev/', this)">
+        📝<span>Présence</span>
+    </div>
+    <div class="fab" onclick="changePage('https://dashboard-presence.pages.dev/', this)">
+        📊<span>Stats</span>
+    </div>
+</div>
 
 <script>
     const loader = document.getElementById('loader');
     const iframe = document.getElementById('main-frame');
 
-    function updateUI(url, title, element) {
-        // 1. Afficher le loader
+    function changePage(url, element) {
+        if(iframe.src === url) return; // Évite de recharger si on est déjà dessus
+        
         loader.style.display = 'flex';
-        
-        // 2. Changer l'URL
         iframe.src = url;
-        
-        // 3. Titre et style
-        document.getElementById('page-title').innerText = title;
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+        // Gestion du style actif
+        document.querySelectorAll('.fab').forEach(btn => btn.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // Cette fonction se déclenche automatiquement quand l'iframe a fini de charger
     function hideLoader() {
         loader.style.display = 'none';
     }
