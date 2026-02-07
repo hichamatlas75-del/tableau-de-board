@@ -3,111 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord - GreyCorner</title>
+    <title>Tableau de Bord Pro</title>
     <style>
-        /* Styles de base pour l'aspect mobile */
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f7f6;
-            overflow: hidden; /* Empêche le scroll de la page parente */
+        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; overflow: hidden; background: #2c3e50; }
+        
+        header { background: #2c3e50; color: white; padding: 15px; text-align: center; font-weight: bold; }
+
+        /* Conteneur de l'iframe */
+        .content-area { position: relative; width: 100%; height: calc(100% - 130px); background: white; }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* ÉCRAN DE CHARGEMENT */
+        #loader {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10;
+            display: none; /* Caché par défaut */
         }
 
-        /* En-tête professionnel */
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        /* Conteneur de l'iframe (la fenêtre d'affichage) */
-        .content-area {
-            width: 100%;
-            height: calc(100% - 130px); /* Ajusté pour header + nav */
-            border: none;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Barre de navigation basse (Mobile Style) */
-        nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background-color: #ffffff;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            border-top: 1px solid #ddd;
-        }
-
-        .nav-item {
-            text-decoration: none;
-            color: #7f8c8d;
-            font-size: 0.8rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: 0.3s;
-        }
-
-        .nav-item.active {
-            color: #3498db;
-            font-weight: bold;
-        }
-
-        .icon {
-            font-size: 1.5rem;
-            margin-bottom: 2px;
-        }
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; height: 70px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .nav-item { flex: 1; text-decoration: none; color: #7f8c8d; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .nav-item.active { color: #3498db; border-top: 3px solid #3498db; }
+        .icon { font-size: 1.4rem; }
     </style>
 </head>
 <body>
 
-<header id="page-title">Tableau de Bord</header>
+<header id="page-title">Pointage</header>
 
 <div class="content-area">
-    <iframe id="main-frame" src="https://pointage-greycorner.pages.dev/" title="Application"></iframe>
+    <div id="loader"><div class="spinner"></div></div>
+    
+    <iframe id="main-frame" src="https://pointage-greycorner.pages.dev/" onload="hideLoader()"></iframe>
 </div>
 
 <nav>
-    <a href="#" class="nav-item active" onclick="loadPage('https://pointage-greycorner.pages.dev/', 'Pointage', this)">
-        <span class="icon">📍</span>
-        <span>Pointage</span>
+    <a href="#" class="nav-item active" onclick="updateUI('https://pointage-greycorner.pages.dev/', 'Pointage', this)">
+        <span class="icon">📍</span><span>Pointage</span>
     </a>
-    <a href="#" class="nav-item" onclick="loadPage('https://feuille-de-presence.pages.dev/', 'Présence', this)">
-        <span class="icon">📝</span>
-        <span>Présence</span>
+    <a href="#" class="nav-item" onclick="updateUI('https://feuille-de-presence.pages.dev/', 'Présence', this)">
+        <span class="icon">📝</span><span>Présence</span>
     </a>
-    <a href="#" class="nav-item" onclick="loadPage('https://dashboard-presence.pages.dev/', 'Supervision', this)">
-        <span class="icon">📊</span>
-        <span>Supervision</span>
+    <a href="#" class="nav-item" onclick="updateUI('https://dashboard-presence.pages.dev/', 'Supervision', this)">
+        <span class="icon">📊</span><span>Supervision</span>
     </a>
 </nav>
 
 <script>
-    function loadPage(url, title, element) {
-        // Change la source de l'iframe
-        document.getElementById('main-frame').src = url;
-        
-        // Met à jour le titre de l'en-tête
-        document.getElementById('page-title').innerText = title;
+    const loader = document.getElementById('loader');
+    const iframe = document.getElementById('main-frame');
 
-        // Gère l'état visuel "actif" des boutons
-        const items = document.querySelectorAll('.nav-item');
-        items.forEach(item => item.classList.remove('active'));
+    function updateUI(url, title, element) {
+        // 1. Afficher le loader
+        loader.style.display = 'flex';
+        
+        // 2. Changer l'URL
+        iframe.src = url;
+        
+        // 3. Titre et style
+        document.getElementById('page-title').innerText = title;
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         element.classList.add('active');
+    }
+
+    // Cette fonction se déclenche automatiquement quand l'iframe a fini de charger
+    function hideLoader() {
+        loader.style.display = 'none';
     }
 </script>
 
