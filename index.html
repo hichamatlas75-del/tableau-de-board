@@ -1,117 +1,238 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tableau de Bord - GreyCorner</title>
-    <style>
-        /* Force la fluidité sur mobile */
-        body, html { 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: #0b0e14; /* Couleur sombre pour matcher votre app */
-            overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tableau de Bord - GreyCorner</title>
 
-        /* Conteneur principal qui reçoit le scroll */
-        #main-container {
-            width: 100%;
-            min-height: 100vh;
-            display: block;
-            position: relative;
-        }
+  <style>
+    :root{
+      /* Nouveau thème (noir + vert/Or) */
+      --bg: #070A0F;
+      --surface: rgba(255,255,255,.06);
+      --surface2: rgba(255,255,255,.10);
+      --stroke: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
 
-        /* L'iframe devient une extension de la page */
-        iframe { 
-            width: 100%; 
-            height: 100vh; /* Hauteur de base */
-            border: none;
-            display: block;
-        }
+      --accent: #22c55e;   /* vert */
+      --accent2: #f59e0b;  /* or */
+      --shadow: 0 14px 40px rgba(0,0,0,.55);
+    }
 
-        /* Loader centré */
-        #loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 14, 20, 0.9);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 2000; display: none;
-        }
-        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+    *{ box-sizing: border-box; }
 
-        /* Boutons flottants ultra-discrets */
-        .fab-container {
-            position: fixed;
-            bottom: 20px;
-            right: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            z-index: 3000;
-        }
+    html, body{
+      margin:0;
+      padding:0;
+      width:100%;
+      height:100%;
+      background: radial-gradient(1200px 900px at 20% 0%, rgba(34,197,94,.10), transparent 60%),
+                  radial-gradient(900px 700px at 90% 20%, rgba(245,158,11,.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
 
-        .fab {
-            width: 48px; height: 48px;
-            background-color: rgba(44, 62, 80, 0.8);
-            color: white;
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            font-size: 1.4rem;
-            border: 1px solid rgba(255,255,255,0.1);
-            opacity: 0.4;
-            transition: 0.3s;
-        }
+      /* IMPORTANT: évite les blocages de scroll sur mobile avec iframe */
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
 
-        .fab.active { 
-            opacity: 1; 
-            background-color: #3498db; 
-            transform: scale(1.05);
-        }
-    </style>
+    /* L'iframe prend toute la place, et c'est elle qui scroll */
+    #main-container{
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh; /* mieux sur mobile (barres dynamiques) */
+      background: transparent;
+    }
+
+    iframe{
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+
+      /* iOS/Android: réduit les “glitches” */
+      transform: translateZ(0);
+      -webkit-overflow-scrolling: touch;
+      background: #0b0e14;
+    }
+
+    /* Loader */
+    #loader{
+      position: fixed;
+      inset: 0;
+      background: rgba(7,10,15,.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .spinner{
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,.14);
+      border-top-color: var(--accent);
+      box-shadow: 0 0 0 6px rgba(34,197,94,.08);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Boutons flottants */
+    .fab-container{
+      position: fixed;
+      right: 14px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 3000;
+      padding: 8px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .fab{
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border: 1px solid var(--stroke);
+      color: var(--text);
+      font-size: 1.35rem;
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+      opacity: .78;
+      transition: transform .15s ease, opacity .15s ease, border-color .15s ease;
+    }
+    .fab:active{ transform: scale(.96); }
+    .fab:hover{ opacity: 1; }
+
+    .fab.active{
+      opacity: 1;
+      border-color: rgba(34,197,94,.55);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.14), 0 18px 28px rgba(0,0,0,.45);
+    }
+
+    /* petit badge discret */
+    .badge{
+      position: fixed;
+      left: 14px;
+      bottom: 16px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      font: 600 12px/1.1 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      letter-spacing: .2px;
+      color: rgba(255,255,255,.82);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 2500;
+    }
+    .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent2);
+      box-shadow: 0 0 0 4px rgba(245,158,11,.12);
+    }
+  </style>
 </head>
+
 <body>
+  <div id="loader" aria-live="polite" aria-busy="true">
+    <div class="spinner" aria-label="Chargement"></div>
+  </div>
 
-<div id="loader"><div class="spinner"></div></div>
+  <div id="main-container">
+    <iframe
+      id="main-frame"
+      src="https://pointage-greycorner.pages.dev/"
+      loading="eager"
+      referrerpolicy="no-referrer"
+      title="GreyCorner"
+    ></iframe>
+  </div>
 
-<div id="main-container">
-    <iframe id="main-frame" src="https://pointage-greycorner.pages.dev/" onload="hideLoader()"></iframe>
-</div>
+  <div class="badge" id="page-badge">
+    <span class="dot"></span>
+    <span id="page-label">Pointage</span>
+  </div>
 
-<div class="fab-container">
-    <div class="fab active" onclick="changePage('https://pointage-greycorner.pages.dev/', this)">📍</div>
-    <div class="fab" onclick="changePage('https://feuille-de-presence.pages.dev/', this)">📝</div>
-    <div class="fab" onclick="changePage('https://dashboard-presence.pages.dev/', this)">📊</div>
-</div>
+  <div class="fab-container" role="navigation" aria-label="Navigation">
+    <div class="fab active" data-label="Pointage" onclick="changePage('https://pointage-greycorner.pages.dev/', this)">📍</div>
+    <div class="fab" data-label="Présence" onclick="changePage('https://feuille-de-presence.pages.dev/', this)">📝</div>
+    <div class="fab" data-label="Dashboard" onclick="changePage('https://dashboard-presence.pages.dev/', this)">📊</div>
+  </div>
 
-<script>
-    const loader = document.getElementById('loader');
-    const iframe = document.getElementById('main-frame');
+  <script>
+    const loader = document.getElementById("loader");
+    const iframe = document.getElementById("main-frame");
+    const pageLabel = document.getElementById("page-label");
 
-    function changePage(url, element) {
-        if(iframe.src === url) return; 
-        
-        loader.style.display = 'flex';
-        iframe.src = url;
+    let loadFallbackTimer = null;
 
-        // Reset scroll au sommet
-        window.scrollTo(0,0);
+    function normalizeUrl(u) {
+      try { return new URL(u).href; } catch { return String(u || ""); }
+    }
 
-        document.querySelectorAll('.fab').forEach(btn => btn.classList.remove('active'));
-        element.classList.add('active');
+    function showLoader() {
+      loader.style.display = "flex";
+      // Fallback si l'iframe ne déclenche pas load (certains cas mobiles/cache)
+      clearTimeout(loadFallbackTimer);
+      loadFallbackTimer = setTimeout(() => hideLoader(), 12000);
     }
 
     function hideLoader() {
-        loader.style.display = 'none';
+      loader.style.display = "none";
+      clearTimeout(loadFallbackTimer);
+      loadFallbackTimer = null;
     }
 
-    /* ASTUCE : Force la hauteur de l'iframe à s'adapter au contenu 
-       Note: Cela ne marche que si les domaines sont identiques ou autorisés */
-</script>
+    // Load initial
+    iframe.addEventListener("load", hideLoader);
+    iframe.addEventListener("error", hideLoader);
 
+    function changePage(url, element) {
+      const current = normalizeUrl(iframe.src);
+      const target = normalizeUrl(url);
+      if (current === target) return;
+
+      showLoader();
+
+      // Active button
+      document.querySelectorAll(".fab").forEach(btn => btn.classList.remove("active"));
+      element.classList.add("active");
+
+      // Label
+      pageLabel.textContent = element.getAttribute("data-label") || "Page";
+
+      // Changement de page
+      // (pas de window.scrollTo : on a désactivé le scroll du parent pour éviter les blocages)
+      iframe.src = target;
+    }
+
+    // Option: afficher le loader si l'utilisateur recharge l'iframe via navigation interne
+    // (si besoin, laisser activé)
+    iframe.addEventListener("beforeload", showLoader);
+  </script>
 </body>
 </html>
